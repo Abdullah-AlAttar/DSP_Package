@@ -3,11 +3,7 @@ import numpy as np
 
 
 def read_file(path):
-    f = open(path)
-    output = []
-    for line in f:
-        output.append(int(line))
-    return output
+    return np.array([int(line) for line in open(path)])
 
 
 # x = read_file('./data/file1.txt')

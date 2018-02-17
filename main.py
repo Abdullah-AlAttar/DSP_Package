@@ -21,20 +21,11 @@ class GUI:
         self.filemenu = Menu(self.menubar, tearoff=0)
         self.init_filemenu()
         self.master.config(menu=self.menubar)
-
         self.path = ''
-
         self.fig = plt.figure(1)
-
-        # plt.ion()
-        # t = np.arange(0.0, 3.0, 0.01)
-        # s = np.cos(np.pi * t)
-        # plt.plot(t, s)
-
         canvas = FigureCanvasTkAgg(self.fig, master=root)
         self.plot_widget = canvas.get_tk_widget()
         self.plot_widget.pack(side=BOTTOM)
-        # layout
 
     def init_filemenu(self):
         self.filemenu.add_command(label="Open", command=self.open_dialog)
