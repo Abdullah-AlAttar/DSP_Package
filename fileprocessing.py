@@ -9,9 +9,19 @@ import numpy as np
 # plt.show()
 # print(l)
 
+from scipy.io import wavfile
+import winsound
+from playsound import playsound
+
 
 def read_file(path):
-    return ([float(line) for line in open(path)])
+    if path.endswith('.wav'):
+        rate, signal = wavfile.read(path)
+        # winsound.PlaySound(path, winsound.SND_FILENAME)
+        playsound(path)
+        return signal
+    else:
+        return ([float(line) for line in open(path)])
 
 
 # x = read_file('./data/file1.txt')
