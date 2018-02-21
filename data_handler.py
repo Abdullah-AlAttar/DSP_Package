@@ -25,6 +25,7 @@ class Data:
         delta = (ma - mi) / float(levels)
 
         midpoints = []
+        print(levels)
         for i in range(levels):
             midpoints.append(((mi + delta) + mi) / 2.0)
             mi += delta

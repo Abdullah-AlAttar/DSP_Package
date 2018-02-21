@@ -8,7 +8,7 @@ from matplotlib.figure import Figure
 import matplotlib.pyplot as plt
 from matplotlib import style
 import numpy as np
-
+import math
 from fileprocessing import read_file
 from data_handler import Data
 matplotlib.use("TkAgg")
@@ -22,6 +22,8 @@ class GUI:
         self.master = master
         master.title("Digital Signal Processing")
         master.geometry("800x600")
+
+        self.master.protocol("WM_DELETE_WINDOW", self.master.quit)
         self.data = Data()
         self.scalar = 1
         self.popup_return = ''
@@ -75,12 +77,12 @@ class GUI:
         self.draw_on_canvas(clear=True)
 
     def on_scale(self):
-        self.popupmsg()
+        self.popupmsg('Enter your value')
         self.data.quantize(levels=self.scalar)
         self.draw_on_canvas(clear=True)
 
     def on_quantize(self):
-        self.popupmsg()
+        self.popupmsg('Number of Levels/Bits for example 3L/3B:')
         self.data.quantize(levels=self.scalar)
         self.draw_on_canvas(clear=True)
 
@@ -91,9 +93,9 @@ class GUI:
         for signal in self.data.signals:
             x_axis = range(len(signal))
             plt.scatter(x_axis, signal)
-            self.fig.canvas.draw()
+        self.fig.canvas.draw()
 
-    def popupmsg(self):
+    def popupmsg(self, msg):
         popup = tk.Tk()
         popup.wm_title("")
         input = ttk.Entry(popup)
@@ -103,12 +105,16 @@ class GUI:
         popup.protocol("WM_DELETE_WINDOW", disable_event)
 
         def on_press():
-            self.scalar = int(input.get())
             self.popup_return = input.get()
+            if self.popup_return.endswith(('b', 'B')):
+                self.scalar = int(math.pow(2, int(self.popup_return[:-1])))
+            else:
+                self.scalar = int(self.popup_return[:-1])
+
             popup.destroy()
             self.master.quit()
 
-        label = ttk.Label(popup, text='Enter Your value')
+        label = ttk.Label(popup, text=msg)
         label.pack(side="top", fill="x", padx=12)
         b = ttk.Button(popup, text="Submit", command=on_press)
         input.pack()
