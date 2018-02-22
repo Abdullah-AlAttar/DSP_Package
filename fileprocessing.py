@@ -24,4 +24,25 @@ def read_file(path):
         return ([float(line) for line in open(path)])
 
 
+def read_ds_file(path):
+    if path.endswith('.wav'):
+        rate, signal = wavfile.read(path)
+        # winsound.PlaySound(path, winsound.SND_FILENAME)
+        playsound(path)
+        return dict(zip(range(len(signal)), signal.tolist()))
+    else:
+        f = open(path)
+        signal_type = int(f.readline())
+        if signal_type == 0:
+            is_periodic = int(f.readline())
+            num_of_samples = int(f.readline())
+            signal = dict()
+            for i in f:
+                i = i.split()
+                signal[int(i[0])] = float(i[1])
+            return signal
+
+
+# d = read_ds_file('./data/audio/dog_growl3.wav')
+# print(d)
 # x = read_file('./data/file1.txt')

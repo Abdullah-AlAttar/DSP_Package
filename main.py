@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 from matplotlib import style
 import numpy as np
 import math
-from fileprocessing import read_file
+from fileprocessing import read_file, read_ds_file
 from data_handler import Data
 matplotlib.use("TkAgg")
 style.use('bmh')
@@ -58,27 +58,27 @@ class GUI:
 
     def open_dialog(self):
         self.path = tk.filedialog.askopenfilename()
-        self.data.signals = [(read_file(self.path))]
+        self.data.signals = [read_ds_file(self.path)]
         self.draw_on_canvas(clear=True)
 
     def on_append(self):
         self.path = tk.filedialog.askopenfilename()
-        self.data.signals.append(read_file(self.path))
+        self.data.signals.append(read_ds_file(self.path))
         self.draw_on_canvas()
 
     def on_add(self):
         self.path = tk.filedialog.askopenfilename()
-        self.data.apply_operation(read_file(self.path), op='+')
+        self.data.apply_operation(read_ds_file(self.path), op='+')
         self.draw_on_canvas(clear=True)
 
     def on_subtract(self):
         self.path = tk.filedialog.askopenfilename()
-        self.data.apply_operation(read_file(self.path), op='-')
+        self.data.apply_operation(read_ds_file(self.path), op='-')
         self.draw_on_canvas(clear=True)
 
     def on_scale(self):
         self.popupmsg('Enter your value')
-        self.data.quantize(levels=self.scalar)
+        self.data.apply_operation(self.scalar, op='s')
         self.draw_on_canvas(clear=True)
 
     def on_quantize(self):
@@ -91,8 +91,8 @@ class GUI:
             plt.clf()
         plt.gca().set_color_cycle(None)
         for signal in self.data.signals:
-            x_axis = range(len(signal))
-            plt.scatter(x_axis, signal)
+            # x_axis = range(len(signal))
+            plt.scatter(signal.keys(), signal.values())
         self.fig.canvas.draw()
 
     def popupmsg(self, msg):
@@ -108,9 +108,10 @@ class GUI:
             self.popup_return = input.get()
             if self.popup_return.endswith(('b', 'B')):
                 self.scalar = int(math.pow(2, int(self.popup_return[:-1])))
-            else:
+            elif self.popup_return.endswith(('l', 'L')):
                 self.scalar = int(self.popup_return[:-1])
-
+            else:
+                self.scalar = int(self.popup_return)
             popup.destroy()
             self.master.quit()
 
