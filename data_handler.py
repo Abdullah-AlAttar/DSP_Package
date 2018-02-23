@@ -30,7 +30,7 @@ class Data:
                         s[idx] += signal[idx]
                 elif op == '-':
                     for idx in set(s) & set(signal):
-                        s[idx] += signal[idx]
+                        s[idx] -= signal[idx]
                 for idx in set(signal) - set(s):
                     s[idx] = signal[idx]
 
