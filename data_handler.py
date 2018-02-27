@@ -1,6 +1,7 @@
 
 import itertools
 import sys
+import math
 
 
 class Data:
@@ -8,17 +9,7 @@ class Data:
         self.signals = []
 
     def apply_operation(self, signal, op):
-        # if op == 's':
-        #     for s in self.signals:
-        #         for i in range(len(s)):
-        #             s[i] *= signal
-        # else:
-        #     for s in self.signals:
-        #         for i in range(min(len(s), len(signal))):
-        #             if op == '+':
-        #                 s[i] += signal[i]
-        #             elif op == '-':
-        #                 s[i] -= signal[i]
+
         if op == 's':
             for s in self.signals:
                 for i in s:
@@ -48,10 +39,16 @@ class Data:
         for i in range(levels):
             midpoints.append(((mi + delta) + mi) / 2.0)
             mi += delta
+        sample_error = []
 
         for s in self.signals:
             for i in s:
-                s[i] = self._find_nearset_midpoint(s[i], midpoints)
+                new_val = self._find_nearset_midpoint(s[i], midpoints)
+                sample_error.append(format(new_val - s[i], '.3f'))
+                s[i] = new_val
+        # bits_num = math.log2(levels)
+        encoding = [bin((i + 1) % (levels))[2:] for i in range(levels)]
+        return encoding, sample_error
 
     def _find_nearset_midpoint(self, signal, midpoints):
         val = sys.maxsize

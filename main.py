@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 from matplotlib import style
 import numpy as np
 import math
-from fileprocessing import read_file, read_ds_file
+from fileprocessing import read_file, read_ds_file, save_ds_file
 from data_handler import Data
 matplotlib.use("TkAgg")
 style.use('bmh')
@@ -42,8 +42,11 @@ class GUI:
         self.file_menu.add_command(label="Open", command=self.open_dialog)
         self.file_menu.add_command(
             label="Append", command=self.on_append)
+        self.file_menu.add_command(
+            label="Save", command=self.on_save)
         self.operations_menu.add_command(
             label="Add", command=self.on_add)
+
         self.operations_menu.add_command(
             label="Subtract", command=self.on_subtract)
         self.operations_menu.add_command(
@@ -83,8 +86,9 @@ class GUI:
 
     def on_quantize(self):
         self.popupmsg('Number of Levels/Bits for example 3L/3B:')
-        self.data.quantize(levels=self.scalar)
+        encoding, sample_error = self.data.quantize(levels=self.scalar)
         self.draw_on_canvas(clear=True)
+        self.popup_after_quantize(encoding, sample_error)
 
     def draw_on_canvas(self, clear=False):
         if clear:
@@ -94,6 +98,10 @@ class GUI:
             # x_axis = range(len(signal))
             plt.scatter(signal.keys(), signal.values())
         self.fig.canvas.draw()
+
+    def on_save(self):
+        self.path = tk.filedialog.asksaveasfilename()
+        save_ds_file(self.path, self.data.signals[0])
 
     def popupmsg(self, msg):
         popup = tk.Tk()
@@ -120,6 +128,28 @@ class GUI:
         b = ttk.Button(popup, text="Submit", command=on_press)
         input.pack()
         b.pack(side='bottom')
+        popup.mainloop()
+
+    def popup_after_quantize(self, encoding, sample_error):
+
+        popup = tk.Tk()
+        popup.wm_title("")
+
+        def disable_event():
+            popup.destroy()
+            self.master.quit()
+        popup.protocol("WM_DELETE_WINDOW", disable_event)
+
+        encoding_list = tk.Listbox(popup)
+        encoding_list.insert(0,"Encoding")
+        sample_error_list = tk.Listbox(popup)
+        sample_error_list.insert(0,"Error")
+        for i in range(len(encoding)):
+            encoding_list.insert(i + 1, encoding[i])
+        for i in range(len(sample_error)):
+            sample_error_list.insert(i + 1, sample_error[i])
+        encoding_list.pack(side='left')
+        sample_error_list.pack(side='right')
         popup.mainloop()
 
 

@@ -43,6 +43,14 @@ def read_ds_file(path):
             return signal
 
 
-# d = read_ds_file('./data/audio/dog_growl3.wav')
-# print(d)
-# x = read_file('./data/file1.txt')
+def save_ds_file(path, signal):
+    f = open(path, mode='w')
+    f.write('0\n')
+    f.write('0\n')
+    f.write(str(len(signal)) + '\n')
+    for s in signal:
+        f.write(str(s) + ' ' + str(signal[s]) + '\n')
+    f.close()
+    # d = read_ds_file('./data/audio/dog_growl3.wav')
+    # print(d)
+    # x = read_file('./data/file1.txt')
