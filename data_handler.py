@@ -2,11 +2,13 @@
 import itertools
 import sys
 import math
+import numpy as np
 
 
 class Data:
     def __init__(self):
         self.signals = []
+        self.frequency = None
 
     def apply_operation(self, signal, op):
 
@@ -58,3 +60,16 @@ class Data:
                 res = m
                 val = abs(m - signal)
         return res
+
+    def dft(self, s, inverse=False):
+        np.set_printoptions(suppress=True)
+        s = np.array(s)
+        N = s.shape[0]
+        n, k = np.arange(N), np.arange(N).reshape((N, 1))
+        jj = np.complex(0 + 2j) if inverse else np.complex(0 - 2j)
+        M = np.exp(jj * np.pi * k * n / N)
+
+        res = (np.dot(M, s) / N) if inverse else np.dot(M, s)
+        amp = np.sqrt(np.square(res.real) + np.square(res.imag))
+        phase = np.rad2deg(np.arctan(res.imag / res.real))
+        return res if inverse else (res, amp, phase)

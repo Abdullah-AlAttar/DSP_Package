@@ -30,20 +30,30 @@ def read_ds_file(path):
         # winsound.PlaySound(path, winsound.SND_FILENAME)
         playsound(path)
         return dict(zip(range(len(signal)), signal.tolist()))
-    else:
-        f = open(path)
-        signal_type = int(f.readline())
-        if signal_type == 0:
-            is_periodic = int(f.readline())
-            num_of_samples = int(f.readline())
-            signal = dict()
-            for i in f:
-                i = i.split()
-                signal[int(i[0])] = float(i[1])
-            return signal
+
+    f = open(path)
+    signal_type = int(f.readline())
+    if signal_type == 0:
+        is_periodic = int(f.readline())
+        num_of_samples = int(f.readline())
+        signal = dict()
+        for i in f:
+            i = i.split()
+            signal[int(i[0])] = float(i[1])
+        return signal
+    elif signal_type == 1:
+        is_periodic = int(f.readline())
+        num_of_samples = int(f.readline())
+        freq, amp, phase = [], [], []
+        for i in f:
+            i = i.split()
+            freq.append(float(i[0]))
+            amp.append(float(i[1]))
+            phase.append(float(i[2]))
+        return freq, amp, phase
 
 
-def save_ds_file(path, signal):
+def save_ds_file(path, signal, type=0):
     f = open(path, mode='w')
     f.write('0\n')
     f.write('0\n')
@@ -51,6 +61,15 @@ def save_ds_file(path, signal):
     for s in signal:
         f.write(str(s) + ' ' + str(signal[s]) + '\n')
     f.close()
-    # d = read_ds_file('./data/audio/dog_growl3.wav')
-    # print(d)
-    # x = read_file('./data/file1.txt')
+
+
+def save_ds_frequency(path, x_axis, amplitude, phase):
+    f = open(path, mode='w')
+    f.write('1\n')
+    f.write('0\n')
+    f.write(str(len(amplitude)) + '\n')
+
+    for i in range(len(x_axis)):
+        f.write(str(round(x_axis[i], 4)) + ' ' + str(round(amplitude[i], 4)) +
+                ' ' + str(round(phase[i], 4)) + '\n')
+    f.close()

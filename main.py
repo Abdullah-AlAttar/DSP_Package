@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 from matplotlib import style
 import numpy as np
 import math
-from fileprocessing import read_file, read_ds_file, save_ds_file
+from fileprocessing import read_file, read_ds_file, save_ds_file, save_ds_frequency
 from data_handler import Data
 matplotlib.use("TkAgg")
 style.use('bmh')
@@ -39,7 +39,10 @@ class GUI:
         self.plot_widget.pack(side=tk.BOTTOM)
 
     def init_menubar(self):
-        self.file_menu.add_command(label="Open", command=self.open_dialog)
+        self.file_menu.add_command(
+            label="Open Time signal", command=self.open_time_dialog)
+        self.file_menu.add_command(
+            label="Open Frequency signal", command=self.open_freq_dialog)
         self.file_menu.add_command(
             label="Append", command=self.on_append)
         self.file_menu.add_command(
@@ -53,13 +56,23 @@ class GUI:
             label="Scale", command=self.on_scale)
         self.operations_menu.add_command(
             label="Quantize", command=self.on_quantize)
+        self.operations_menu.add_command(
+            label="DFT", command=self.on_dft)
+        self.operations_menu.add_command(
+            label="IDFT", command=self.on_idft)
         self.file_menu.add_separator()
         self.file_menu.add_command(label="Exit", command=self.master.quit)
         self.menubar.add_cascade(label="File", menu=self.file_menu)
         self.menubar.add_cascade(label="Operations", menu=self.operations_menu)
-        # self.filemenu.entryconfigure("Save", state=DISABLED)
 
-    def open_dialog(self):
+        # self.filemenu.entryconfigure("Save", state=DISABLED)
+    def open_freq_dialog(self):
+        self.path = tk.filedialog.askopenfilename()
+        freq, amp, phase = read_ds_file(self.path)
+        self.data.frequency = (freq, amp, phase)
+        self.draw_multi_axes(freq, amp, phase)
+
+    def open_time_dialog(self):
         self.path = tk.filedialog.askopenfilename()
         self.data.signals = [read_ds_file(self.path)]
         self.draw_on_canvas(clear=True)
@@ -99,9 +112,45 @@ class GUI:
             plt.scatter(signal.keys(), signal.values())
         self.fig.canvas.draw()
 
+    def draw_multi_axes(self, freq, amp, phase):
+        plt.clf()
+        plt.subplot(221), plt.title('Amplitudes')
+        plt.scatter(freq, amp)
+        plt.subplot(222), plt.title('Phase')
+        plt.scatter(freq, phase)
+        self.fig.canvas.draw()
+
     def on_save(self):
         self.path = tk.filedialog.asksaveasfilename()
         save_ds_file(self.path, self.data.signals[0])
+
+    def on_dft(self):
+        s = list(self.data.signals[0].values())
+        res, amp, phase = self.data.dft(s)
+
+        self.popupmsg('Enter Sampling Frequency ')
+        self.scalar = (2 * np.pi) / (len(amp) * (1 / self.scalar))
+        freq = [self.scalar * (i + 1) for i in range(len(amp))]
+        self.draw_multi_axes(freq, amp, phase)
+        save_ds_frequency('./data/outputFreq.ds', freq, amp, phase)
+        print(res)
+        print(freq)
+        print(amp)
+        print(phase)
+
+    def on_idft(self):
+
+        x = self.data.frequency[1] * np.cos(np.deg2rad(self.data.frequency[2]))
+        y = self.data.frequency[1] * np.sin(np.deg2rad(self.data.frequency[2]))
+        x = np.round(x, 4)
+        y = np.round(y, 4)
+        res = x + y * 1j
+        res = self.data.dft(res, inverse=True)
+        res = np.flip(res, 0)
+        self.data.signals.append(dict(zip(range(len(res)), res.tolist())))
+        self.draw_on_canvas(clear=True)
+        # res = self.data.dft(self.data.signals[0].values())
+        # print(res)
 
     def popupmsg(self, msg):
         popup = tk.Tk()
@@ -141,9 +190,9 @@ class GUI:
         popup.protocol("WM_DELETE_WINDOW", disable_event)
 
         encoding_list = tk.Listbox(popup)
-        encoding_list.insert(0,"Encoding")
+        encoding_list.insert(0, "Encoding")
         sample_error_list = tk.Listbox(popup)
-        sample_error_list.insert(0,"Error")
+        sample_error_list.insert(0, "Error")
         for i in range(len(encoding)):
             encoding_list.insert(i + 1, encoding[i])
         for i in range(len(sample_error)):
