@@ -47,9 +47,12 @@ class GUI:
             label="Append", command=self.on_append)
         self.file_menu.add_command(
             label="Save", command=self.on_save)
+
+        self.file_menu.add_command(
+            label="Generate Signal", command=self.on_generate)
+
         self.operations_menu.add_command(
             label="Add", command=self.on_add)
-
         self.operations_menu.add_command(
             label="Subtract", command=self.on_subtract)
         self.operations_menu.add_command(
@@ -67,6 +70,7 @@ class GUI:
 
         # self.filemenu.entryconfigure("Save", state=DISABLED)
     def open_freq_dialog(self):
+        self.data.signals = []
         self.path = tk.filedialog.askopenfilename()
         freq, amp, phase = read_ds_file(self.path)
         self.data.frequency = (freq, amp, phase)
@@ -131,8 +135,12 @@ class GUI:
         self.popupmsg('Enter Sampling Frequency ')
         self.scalar = (2 * np.pi) / (len(amp) * (1 / self.scalar))
         freq = [self.scalar * (i + 1) for i in range(len(amp))]
+
         self.draw_multi_axes(freq, amp, phase)
-        save_ds_frequency('./data/outputFreq.ds', freq, amp, phase)
+        x_axis = list(self.data.signals[0].keys())
+        save_ds_frequency('./data/outputFreq.ds', x_axis, amp, phase)
+        self.data.frequency = (x_axis, amp, phase)
+        self.data.signals = []
         print(res)
         print(freq)
         print(amp)
@@ -140,17 +148,26 @@ class GUI:
 
     def on_idft(self):
 
-        x = self.data.frequency[1] * np.cos(np.deg2rad(self.data.frequency[2]))
-        y = self.data.frequency[1] * np.sin(np.deg2rad(self.data.frequency[2]))
-        x = np.round(x, 4)
-        y = np.round(y, 4)
+        x = self.data.frequency[1] * np.cos(self.data.frequency[2])
+        y = self.data.frequency[1] * np.sin(self.data.frequency[2])
+        # x = np.round(x, 4)
+        # y = np.round(y, 4)
         res = x + y * 1j
+        print(res)
         res = self.data.dft(res, inverse=True)
-        res = np.flip(res, 0)
+        # res = np.flip(res, 0)
         self.data.signals.append(dict(zip(range(len(res)), res.tolist())))
+        print(self.data.signals[0])
         self.draw_on_canvas(clear=True)
         # res = self.data.dft(self.data.signals[0].values())
         # print(res)
+
+    def on_generate(self):
+        self.popupmsg('Sin/Cos,n_samples,Amplitude,theta,F,Fs')
+        s_type, n, A, theta, F, Fs = self.popup_return
+        n, A, theta, F, Fs = int(n), int(A), int(theta), int(F), int(Fs)
+        self.data.generate_signal(s_type, n, A, theta, F, Fs)
+        self.draw_on_canvas()
 
     def popupmsg(self, msg):
         popup = tk.Tk()
@@ -167,8 +184,10 @@ class GUI:
                 self.scalar = int(math.pow(2, int(self.popup_return[:-1])))
             elif self.popup_return.endswith(('l', 'L')):
                 self.scalar = int(self.popup_return[:-1])
+            elif self.popup_return.startswith(('sin', 'cos')):
+                self.popup_return = self.popup_return.split(',')
             else:
-                self.scalar = int(self.popup_return)
+                self.scalar = float(self.popup_return)
             popup.destroy()
             self.master.quit()
 

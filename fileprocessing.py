@@ -70,6 +70,6 @@ def save_ds_frequency(path, x_axis, amplitude, phase):
     f.write(str(len(amplitude)) + '\n')
 
     for i in range(len(x_axis)):
-        f.write(str(round(x_axis[i], 4)) + ' ' + str(round(amplitude[i], 4)) +
-                ' ' + str(round(phase[i], 4)) + '\n')
+        f.write(str(x_axis[i]) + ' ' + str(amplitude[i]) +
+                ' ' + str(phase[i]) + '\n')
     f.close()
