@@ -14,6 +14,7 @@ from data_handler import Data
 matplotlib.use("TkAgg")
 style.use('bmh')
 # style.use('seaborn')
+np.set_printoptions(suppress=True)
 
 
 class GUI:
@@ -36,7 +37,47 @@ class GUI:
         self.fig = plt.figure(1)
         canvas = FigureCanvasTkAgg(self.fig, master=root)
         self.plot_widget = canvas.get_tk_widget()
+        self.nextBtn = tk.Button(
+            self.master, text='Next', command=self.draw_next)
+        self.prevBtn = tk.Button(
+            self.master, text='Prev', command=self.draw_prev)
+        self.prevBtn.pack()
+        self.nextBtn.pack()
         self.plot_widget.pack(side=tk.BOTTOM)
+        self.counter = 0
+
+    def draw_next(self):
+        self.counter += 1
+        if self.counter >= len(self.data.signals[0]):
+            self.counter -= 1
+        plt.clf()
+        plt.gca().set_color_cycle(None)
+        for signal in self.data.signals:
+            # x_axis = range(len(signal))
+            # plt.xticks(list(signal.keys()))
+            plt.xlim((min(list(signal.keys())) - 1,
+                      max(list(signal.keys())) + 1))
+            plt.ylim((min(list(signal.values())) - 1,
+                      max(list(signal.values())) + 1))
+            plt.scatter(list(signal.keys())[:self.counter],
+                        list(signal.values())[:self.counter])
+        self.fig.canvas.draw()
+
+    def draw_prev(self):
+        self.counter -= 1
+        if self.counter <= 0:
+            self.counter += 1
+        plt.clf()
+        plt.gca().set_color_cycle(None)
+        for signal in self.data.signals:
+            # x_axis = range(len(signal))
+            plt.xlim((min(list(signal.keys())) - 1,
+                      max(list(signal.keys())) + 1))
+            plt.ylim((min(list(signal.values())) - 1,
+                      max(list(signal.values())) + 1))
+            plt.scatter(list(signal.keys())[:self.counter],
+                        list(signal.values())[:self.counter])
+        self.fig.canvas.draw()
 
     def init_menubar(self):
         self.file_menu.add_command(
@@ -108,6 +149,7 @@ class GUI:
         self.popup_after_quantize(encoding, sample_error)
 
     def draw_on_canvas(self, clear=False):
+        self.counter = len(self.data.signals[0])
         if clear:
             plt.clf()
         plt.gca().set_color_cycle(None)
@@ -142,9 +184,10 @@ class GUI:
         self.data.frequency = (x_axis, amp, phase)
         self.data.signals = []
         print(res)
-        print(freq)
-        print(amp)
-        print(phase)
+        print(self.data.fft(s))
+        # print(freq)
+        # print(amp)
+        # print(phase)
 
     def on_idft(self):
 
@@ -153,10 +196,14 @@ class GUI:
         # x = np.round(x, 4)
         # y = np.round(y, 4)
         res = x + y * 1j
-        print(res)
+        print('ifft')
         res = self.data.dft(res, inverse=True)
+        print(res)
+        print(self.data.fft(res, inverse=True))
+        print('ifft')
         # res = np.flip(res, 0)
-        self.data.signals.append(dict(zip(range(len(res)), res.tolist())))
+        self.data.signals.append(
+            dict(zip(range(len(res)), res.real.tolist())))
         print(self.data.signals[0])
         self.draw_on_canvas(clear=True)
         # res = self.data.dft(self.data.signals[0].values())
@@ -222,8 +269,6 @@ class GUI:
 
 
 root = tk.Tk()
-
-
 gui = GUI(root)
 
 root.mainloop()

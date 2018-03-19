@@ -74,6 +74,23 @@ class Data:
         phase = np.angle(res)
         return res if inverse else (res, amp, phase)
 
+    def fft(self, s, inverse=False):
+        s = np.array(s)
+        N = s.shape[0]
+        if N <= 1:
+            return s
+
+        even = self.fft(s[::2])
+        odd = self.fft(s[1::2])
+
+        t = np.exp(np.complex(-2j) * np.pi * np.arange(N // 2) / N)
+
+        return np.concatenate((even + t * odd,
+                               even - t * odd))
+
+    def ifft(self, s):
+        return self.fft(s.conjugate()).conjugate().real / s.shape[0]
+
     def generate_signal(self, signal_type='sin', n=100, A=1, theta=0, F=1, Fs=1):
         self.signals.clear()
         if signal_type == 'sin':
@@ -83,6 +100,3 @@ class Data:
             res = [A * np.cos(2 * np.pi * (F / Fs) * i + theta)
                    for i in range(n)]
         self.signals.append(dict(zip(range(len(res)), res)))
-
-# data =  Data()
-# data.generate_signal('sin',n=100,A=1)
