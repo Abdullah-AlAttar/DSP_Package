@@ -101,9 +101,17 @@ class GUI:
         self.operations_menu.add_command(
             label="Quantize", command=self.on_quantize)
         self.operations_menu.add_command(
+            label="Delay", command=self.on_delay)
+        self.operations_menu.add_command(
+            label="Fold", command=self.on_fold)
+        self.operations_menu.add_command(
             label="DFT", command=self.on_dft)
         self.operations_menu.add_command(
+            label="FFT", command=self.on_fft)
+        self.operations_menu.add_command(
             label="IDFT", command=self.on_idft)
+        self.operations_menu.add_command(
+            label="IFFT", command=self.on_ifft)
         self.file_menu.add_separator()
         self.file_menu.add_command(label="Exit", command=self.master.quit)
         self.menubar.add_cascade(label="File", menu=self.file_menu)
@@ -170,10 +178,34 @@ class GUI:
         self.path = tk.filedialog.asksaveasfilename()
         save_ds_file(self.path, self.data.signals[0])
 
+    def on_delay(self):
+
+        self.popupmsg("Enter Delay")
+        self.data.delay(self.scalar)
+        self.draw_on_canvas(True)
+
     def on_dft(self):
         s = list(self.data.signals[0].values())
         res, amp, phase = self.data.dft(s)
 
+        self.popupmsg('Enter Sampling Frequency ')
+        self.scalar = (2 * np.pi) / (len(amp) * (1 / self.scalar))
+        freq = [self.scalar * (i + 1) for i in range(len(amp))]
+
+        self.draw_multi_axes(freq, amp, phase)
+        x_axis = list(self.data.signals[0].keys())
+        save_ds_frequency('./data/outputFreq.ds', x_axis, amp, phase)
+        self.data.frequency = (x_axis, amp, phase)
+        self.data.signals = []
+        print(res)
+        print(self.data.fft(s))
+        # print(freq)
+
+    def on_fft(self):
+        s = list(self.data.signals[0].values())
+        res = self.data.fft(s)
+        amp = np.sqrt(np.square(res.real) + np.square(res.imag))
+        phase = np.angle(res)
         self.popupmsg('Enter Sampling Frequency ')
         self.scalar = (2 * np.pi) / (len(amp) * (1 / self.scalar))
         freq = [self.scalar * (i + 1) for i in range(len(amp))]
@@ -209,6 +241,27 @@ class GUI:
         # res = self.data.dft(self.data.signals[0].values())
         # print(res)
 
+    def on_ifft(self):
+
+        x = self.data.frequency[1] * np.cos(self.data.frequency[2])
+        y = self.data.frequency[1] * np.sin(self.data.frequency[2])
+        # x = np.round(x, 4)
+        # y = np.round(y, 4)
+        res = x + y * 1j
+        print('ifft')
+        res = self.data.ifft(res)
+        print(res)
+        # print(self.data.fft(res, inverse=True))
+        # print('ifft')
+        # res = np.flip(res, 0)
+        self.data.signals.append(
+            dict(zip(range(len(res)), res.real.tolist())))
+        print(self.data.signals[0])
+        self.draw_on_canvas(clear=True)
+        # res = self.data.dft(self.data.signals[0].values())
+        # print(res)
+    def on_fold(self):
+        pass
     def on_generate(self):
         self.popupmsg('Sin/Cos,n_samples,Amplitude,theta,F,Fs')
         s_type, n, A, theta, F, Fs = self.popup_return

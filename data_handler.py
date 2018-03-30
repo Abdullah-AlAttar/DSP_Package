@@ -74,7 +74,7 @@ class Data:
         phase = np.angle(res)
         return res if inverse else (res, amp, phase)
 
-    def fft(self, s, inverse=False):
+    def fft(self, s):
         s = np.array(s)
         N = s.shape[0]
         if N <= 1:
@@ -100,3 +100,24 @@ class Data:
             res = [A * np.cos(2 * np.pi * (F / Fs) * i + theta)
                    for i in range(n)]
         self.signals.append(dict(zip(range(len(res)), res)))
+
+    def delay(self, k, folded=False):
+        
+        k = -k if folded else k
+        tmp = dict((key + k, value)
+                   for (key, value) in self.signals[0].items())
+        self.signals[0] = tmp
+        print(tmp)
+        for i in self.signals[0]:
+            print(i, self.signals[0][i])
+
+
+    def fold(self):
+        pass
+
+    def convolve(self,x,h):
+        res  = np.zeros(len(x) + len(h)-1)
+        for i in range(len(x)):
+            for j in range(len(h)):
+                res[i+j] += x[i]*h[j]
+        return res
