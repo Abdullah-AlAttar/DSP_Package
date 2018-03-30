@@ -26,10 +26,10 @@ def fft_convolve(x, h):
     fsize = 1 << (size - 1).bit_length()
     x = np.append(x, np.zeros(fsize - len(x)))
     h = np.append(h, np.zeros(fsize - len(h)))
-    x_fft = np.fft.fft(x, fsize)
-    h_fft = np.fft.fft(h, fsize)
+    x_fft = fft(x)
+    h_fft = fft(h)
 
-    return np.fft.ifft(x_fft * h_fft).real[:size]
+    return ifft(x_fft * h_fft).real[:size]
 
 
 def convolve(x, h):
